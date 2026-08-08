@@ -123,3 +123,47 @@ st.sidebar.markdown('- Streamlit')
 
 st.sidebar.markdown('### Model')
 st.sidebar.write('Hybrid NLP + ML classifier for email priority prediction.')
+#Batch Email Analyzer
+
+st.markdown('---')
+st.header('📥 Batch Email Analyzer')
+
+uploaded_file = st.file_uploader(
+    'Upload emails.csv',
+    type=['csv']
+)
+
+if uploaded_file is not None:
+    emails_df = pd.read_csv(uploaded_file)
+
+    results = []
+
+    for _, row in emails_df.iterrows():
+        combined_text = f"{row['subject']} {row['body']}"
+        pred, conf, source = predict_priority(combined_text)
+
+        results.append({
+            'Sender': row['sender'],
+            'Subject': row['subject'],
+            'Priority': pred,
+            'Confidence': f'{conf*100:.1f}%',
+            'Source': source
+        })
+
+    result_df = pd.DataFrame(results)
+
+    priority_order = {'High': 0, 'Medium': 1, 'Low': 2}
+    result_df['sort_key'] = result_df['Priority'].map(priority_order)
+    result_df = result_df.sort_values('sort_key').drop(columns=['sort_key'])
+
+    st.subheader('📌 Prioritized Inbox')
+    st.dataframe(result_df, use_container_width=True)
+
+    csv = result_df.to_csv(index=False).encode('utf-8')
+
+    st.download_button(
+        label='📥 Download Prioritized Inbox',
+        data=csv,
+        file_name='prioritized_inbox.csv',
+        mime='text/csv'
+    )
