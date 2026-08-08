@@ -30,11 +30,11 @@ def clean_text(text):
 
 def predict_priority(message):
     text = clean_text(message)
-
+    if any(p in text for p in PROMO_WORDS):
+        return 'Low', 0.99, 'Promotional safeguard'
     for kw in HIGH_KEYWORDS:
         if kw in text:
-            if not any(p in text for p in PROMO_WORDS):    
-                return 'High', 0.99, f'Rule-based keyword: {kw}'
+            return 'High', 0.99, f'Rule-based keyword: {kw}'
 
     for kw in LOW_KEYWORDS:
         if kw in text:
