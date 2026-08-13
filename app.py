@@ -28,6 +28,25 @@ def clean_text(text):
     text = re.sub(r'\\s+', ' ', text).strip()
     return text
 
+def generate_summary(subject, body):
+    text = f"{subject} {body}".lower()
+
+    if 'leave' in text:
+        return 'Sender is requesting leave permission.'
+    elif 'interview' in text:
+        return 'Interview-related communication.'
+    elif 'payment failed' in text:
+        return 'Payment issue requiring immediate attention.'
+    elif 'server' in text:
+        return 'Technical issue reported for the server.'
+    elif 'project' in text or 'review' in text:
+        return 'Project review or academic work discussed.'
+    elif 'thanks' in text:
+        return 'Casual thank-you message.'
+    else:
+        words = body.split()
+        return ' '.join(words[:12]) + ('...' if len(words) > 12 else '')
+    
 def predict_priority(message):
     text = clean_text(message)
     if any(p in text for p in PROMO_WORDS):
@@ -142,9 +161,12 @@ if uploaded_file is not None:
         combined_text = f"{row['subject']} {row['body']}"
         pred, conf, source = predict_priority(combined_text)
 
+        summary = generate_summary(row['subject'], row['body'])
+
         results.append({
             'Sender': row['sender'],
             'Subject': row['subject'],
+            'Summary': summary,
             'Priority': pred,
             'Confidence': f'{conf*100:.1f}%',
             'Source': source
